@@ -738,6 +738,12 @@ class WeatherChartCardEditor extends LitElement {
                 @change="${(e) => this._valueChanged(e, 'forecast.labels_font_size')}"
               ></ha-textfield>
               </div>
+            <ha-textfield
+              label="Datetime Font Size"
+              type="number"
+              .value="${forecastConfig.chart_datetime_font_size || '10'}"
+              @change="${(e) => this._valueChanged(e, 'forecast.chart_datetime_font_size')}"
+            ></ha-textfield>
 	    <div class="flex-container">
               <ha-textfield
                 label="Chart height"

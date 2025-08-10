@@ -53,6 +53,7 @@ static getStubConfig(hass, unusedEntities, allEntities) {
       precipitation_type: 'rainfall',
       show_probability: false,
       labels_font_size: '11',
+      chart_datetime_font_size: '10',
       precip_bar_size: '100',
       style: 'style1',
       show_wind_forecast: true,
@@ -102,6 +103,7 @@ setConfig(config) {
       precipitation_type: 'rainfall',
       show_probability: false,
       labels_font_size: 11,
+      chart_datetime_font_size: 10,
       chart_height: 180,
       precip_bar_size: 100,
       style: 'style1',
@@ -635,6 +637,9 @@ drawChart({ config, language, weather, forecastItems } = this) {
           ticks: {
               maxRotation: 0,
               color: config.forecast.chart_datetime_color || textColor,
+              font: {
+                size: config.forecast.chart_datetime_font_size,
+              },
               padding: config.forecast.precipitation_type === 'rainfall' && config.forecast.show_probability && config.forecast.type !== 'hourly' ? 4 : 10,
               callback: function (value, index, values) {
                   var datetime = this.getLabelForValue(value);
