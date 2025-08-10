@@ -18391,7 +18391,7 @@ async updated(changedProperties) {
     }
 
     if (autoscrollChanged) {
-      if (!this.config.autoscroll) {
+      if (this.config.autoscroll) {
         this.autoscroll();
       } else {
         this.cancelAutoscroll();
@@ -18421,7 +18421,7 @@ autoscroll() {
     this.autoscrollTimeout = setTimeout(() => {
       this.autoscrollTimeout = null;
       this.updateChart();
-      drawChartOncePerHour();
+      updateChartOncePerHour();
     }, nextHour - now);
   };
 
