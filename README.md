@@ -176,3 +176,4 @@ units:
 | Swedish          | sv      |
 | Ukrainian        | uk      |
 | 한국어           | ko      |
+| 日本語           | ja      |
