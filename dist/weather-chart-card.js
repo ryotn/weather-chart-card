@@ -18157,21 +18157,31 @@ subscribeForecastEvents() {
 
   const feature = isHourly ? WeatherEntityFeature.FORECAST_HOURLY : WeatherEntityFeature.FORECAST_DAILY;
   if (!this.supportsFeature(feature)) {
-    console.error(`Weather entity "${this.config.entity}" does not support ${isHourly ? 'hourly' : 'daily'} forecasts.`);
+    console.error(new Date().toISOString(), `Weather entity "${this.config.entity}" does not support ${isHourly ? 'hourly' : 'daily'} forecasts.`);
     return;
   }
 
   const callback = (event) => {
+    console.log(new Date().toISOString(), `Received ${isHourly ? 'hourly' : 'daily'} forecast update for entity ${this.config.entity}:`, event);
     this.forecasts = event.forecast;
+    console.log(new Date().toISOString(), 'Forecasts:', this.forecasts);
     this.requestUpdate();
     this.drawChart();
   };
 
-  this.forecastSubscriber = this._hass.connection.subscribeMessage(callback, {
+  const subPromise = this._hass.connection.subscribeMessage(callback, {
     type: "weather/subscribe_forecast",
     forecast_type: isHourly ? 'hourly' : 'daily',
     entity_id: this.config.entity,
   });
+
+  // If the subscription fails, reset the subscriber so it can be re-attempted.
+  subPromise.catch((err) => {
+    console.error(new Date().toISOString(), 'Forecast subscription failed. Will retry.', err);
+    this.forecastSubscriber = null;
+  });
+
+  this.forecastSubscriber = subPromise;
 }
 
   supportsFeature(feature) {
@@ -18182,6 +18192,7 @@ subscribeForecastEvents() {
     super();
     this.resizeObserver = null;
     this.resizeInitialized = false;
+    this.clockInterval = null;
   }
 
   connectedCallback() {
@@ -18199,10 +18210,16 @@ subscribeForecastEvents() {
   }
 
   disconnectedCallback() {
+    console.log(new Date().toISOString(), 'WeatherChartCard disconnected');
     super.disconnectedCallback();
     this.detachResizeObserver();
     if (this.forecastSubscriber) {
       this.forecastSubscriber.then((unsub) => unsub());
+      this.forecastSubscriber = null;
+    }
+    if (this.clockInterval) {
+      clearInterval(this.clockInterval);
+      this.clockInterval = null;
     }
   }
 
@@ -18379,8 +18396,8 @@ async updated(changedProperties) {
     const autoscrollChanged = oldConfig && this.config.autoscroll !== oldConfig.autoscroll;
 
     if (entityChanged || forecastTypeChanged) {
-      if (this.forecastSubscriber && typeof this.forecastSubscriber === 'function') {
-        this.forecastSubscriber();
+      if (this.forecastSubscriber) {
+        this.forecastSubscriber.then(unsub => unsub());
       }
 
       this.subscribeForecastEvents();
@@ -18441,7 +18458,7 @@ drawChart({ config, language, weather, forecastItems } = this) {
 
   const chartCanvas = this.renderRoot && this.renderRoot.querySelector('#forecastChart');
   if (!chartCanvas) {
-    console.error('Canvas element not found:', this.renderRoot);
+    console.error(new Date().toISOString(), 'Canvas element not found:', this.renderRoot);
     return;
   }
 
@@ -18732,7 +18749,17 @@ drawChart({ config, language, weather, forecastItems } = this) {
 }
 
 computeForecastData({ config, forecastItems } = this) {
-  var forecast = this.forecasts ? this.forecasts.slice(0, forecastItems) : [];
+  let forecast = this.forecasts ? [...this.forecasts] : [];
+
+  // autoscrollが有効な場合、まず過去の予報をすべて除外します。
+  if (config.autoscroll) {
+    const now = new Date();
+    forecast = forecast.filter(d => new Date(d.datetime) >= now);
+  }
+
+  // その後、表示する数だけデータを切り出します。
+  forecast = forecast.slice(0, forecastItems);
+
   var roundTemp = config.forecast.round_temp == true;
   var dateTime = [];
   var tempHigh = [];
@@ -18741,12 +18768,6 @@ computeForecastData({ config, forecastItems } = this) {
 
   for (var i = 0; i < forecast.length; i++) {
     var d = forecast[i];
-    if (config.autoscroll) {
-      const cutoff = (config.forecast.type === 'hourly' ? 1 : 24) * 60 * 60 * 1000;
-      if (new Date() - new Date(d.datetime) > cutoff) {
-        continue;
-      }
-    }
     dateTime.push(d.datetime);
     tempHigh.push(d.temperature);
     if (typeof d.templow !== 'undefined') {
@@ -18966,6 +18987,11 @@ renderMain({ config, sun, weather, temperature, feels_like, description } = this
   if (config.show_main === false)
     return x``;
 
+  if (this.clockInterval) {
+    clearInterval(this.clockInterval);
+    this.clockInterval = null;
+  }
+
   const use12HourFormat = config.use_12hour_format;
   const showTime = config.show_time;
   const showDay = config.show_day;
@@ -19026,7 +19052,7 @@ renderMain({ config, sun, weather, temperature, feels_like, description } = this
   updateClock();
 
   if (showTime) {
-    setInterval(updateClock, 1000);
+    this.clockInterval = setInterval(updateClock, 1000);
   }
 
   return x`
@@ -19067,32 +19093,41 @@ renderMain({ config, sun, weather, temperature, feels_like, description } = this
 
 renderAttributes({ config, humidity, pressure, windSpeed, windDirection, sun, language, uv_index, dew_point, wind_gust_speed, visibility } = this) {
   let dWindSpeed = windSpeed;
+  let dWindGustSpeed = wind_gust_speed;
   let dPressure = pressure;
 
   if (this.unitSpeed !== this.weather.attributes.wind_speed_unit) {
     if (this.unitSpeed === 'm/s') {
       if (this.weather.attributes.wind_speed_unit === 'km/h') {
         dWindSpeed = Math.round(windSpeed * 1000 / 3600);
+        if (wind_gust_speed !== undefined) dWindGustSpeed = Math.round(wind_gust_speed * 1000 / 3600);
       } else if (this.weather.attributes.wind_speed_unit === 'mph') {
         dWindSpeed = Math.round(windSpeed * 0.44704);
+        if (wind_gust_speed !== undefined) dWindGustSpeed = Math.round(wind_gust_speed * 0.44704);
       }
     } else if (this.unitSpeed === 'km/h') {
       if (this.weather.attributes.wind_speed_unit === 'm/s') {
         dWindSpeed = Math.round(windSpeed * 3.6);
+        if (wind_gust_speed !== undefined) dWindGustSpeed = Math.round(wind_gust_speed * 3.6);
       } else if (this.weather.attributes.wind_speed_unit === 'mph') {
         dWindSpeed = Math.round(windSpeed * 1.60934);
+        if (wind_gust_speed !== undefined) dWindGustSpeed = Math.round(wind_gust_speed * 1.60934);
       }
     } else if (this.unitSpeed === 'mph') {
       if (this.weather.attributes.wind_speed_unit === 'm/s') {
         dWindSpeed = Math.round(windSpeed / 0.44704);
+        if (wind_gust_speed !== undefined) dWindGustSpeed = Math.round(wind_gust_speed / 0.44704);
       } else if (this.weather.attributes.wind_speed_unit === 'km/h') {
         dWindSpeed = Math.round(windSpeed / 1.60934);
+        if (wind_gust_speed !== undefined) dWindGustSpeed = Math.round(wind_gust_speed / 1.60934);
       }
     } else if (this.unitSpeed === 'Bft') {
       dWindSpeed = this.calculateBeaufortScale(windSpeed);
+      if (wind_gust_speed !== undefined) dWindGustSpeed = this.calculateBeaufortScale(wind_gust_speed);
     }
   } else {
     dWindSpeed = Math.round(dWindSpeed);
+    if (wind_gust_speed !== undefined) dWindGustSpeed = Math.round(dWindGustSpeed);
   }
 
   if (this.unitPressure !== this.weather.attributes.pressure_unit) {
@@ -19177,7 +19212,7 @@ return x`
           ` : ''}
           ${showWindgustspeed && wind_gust_speed !== undefined ? x`
             <ha-icon icon="hass:weather-windy-variant"></ha-icon>
-            ${wind_gust_speed} ${this.ll('units')[this.unitSpeed]}
+            ${dWindGustSpeed} ${this.ll('units')[this.unitSpeed]}
           ` : ''}
         </div>
       ` : ''}
