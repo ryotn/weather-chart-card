@@ -66,7 +66,7 @@ const locale = {
     'sunny': 'Jasno',
     'windy': 'Veterno',
     'windy-variant': 'Veterno'
-  },  
+  },
   de: {
     'tempHi': 'Temperatur',
     'tempLo': 'Nachttemperatur',
@@ -311,18 +311,18 @@ const locale = {
     'precip': 'Nederbörd',
     'feelsLike': 'Känns som',
     'units': {
-        'km/h': 'km/h',
-        'm/s': 'm/s',
+      'km/h': 'km/h',
+      'm/s': 'm/s',
       'mph': 'mph',
       'Bft': 'Bft',
-        'hPa': 'hPa',
-        'mmHg': 'mm Hg',
-        'mm': 'mm',
-        'in': 'in'
+      'hPa': 'hPa',
+      'mmHg': 'mm Hg',
+      'mm': 'mm',
+      'in': 'in'
     },
     'cardinalDirections': [
-        'N', 'N-NE', 'NE', 'E-NE', 'E', 'E-SE', 'SE', 'S-SE',
-        'S', 'S-SW', 'SW', 'W-SW', 'W', 'W-NW', 'NW', 'N-NW', 'N'
+      'N', 'N-NE', 'NE', 'E-NE', 'E', 'E-SE', 'SE', 'S-SE',
+      'S', 'S-SW', 'SW', 'W-SW', 'W', 'W-NW', 'NW', 'N-NW', 'N'
     ],
     'clear-night': 'Klar natt',
     'cloudy': 'Molnigt',
@@ -423,8 +423,8 @@ const locale = {
       'in': 'in'
     },
     'cardinalDirections': [
-        'N', 'N-NE', 'NE', 'Ø-NØ', 'Ø', 'Ø-SØ', 'SØ', 'S-SØ',
-        'S', 'S-SV', 'SV', 'V-SV', 'V', 'V-NV', 'NV', 'N-NV', 'N'
+      'N', 'N-NE', 'NE', 'Ø-NØ', 'Ø', 'Ø-SØ', 'SØ', 'S-SØ',
+      'S', 'S-SV', 'SV', 'V-SV', 'V', 'V-NV', 'NV', 'N-NV', 'N'
     ],
     'clear-night': 'Klar natt',
     'cloudy': 'Overskyet',
