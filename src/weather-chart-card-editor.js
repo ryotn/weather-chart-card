@@ -1,5 +1,7 @@
 import { LitElement, html } from 'lit';
 
+
+
 const ALT_SCHEMA = [
   { name: "temp", title: "Alternative temperature sensor", selector: { entity: { domain: 'sensor' } } },
   { name: "feels_like", title: "Alternative feels like temperature sensor", selector: { entity: { domain: 'sensor' } } },
@@ -612,11 +614,41 @@ class WeatherChartCardEditor extends LitElement {
            .value="${this._config.icons_size || '25'}"
            @change="${(e) => this._valueChanged(e, 'icons_size')}"
          ></ha-textfield>
+        <ha-textfield
+          label="Today's weather icon size"
+          type="number"
+          .value="${this._config.main_icon_size || '50'}"
+          @change="${(e) => this._valueChanged(e, 'main_icon_size')}"
+        ></ha-textfield>
+        <ha-textfield
+          label="Attributes icon size (humidity, pressure, UV, sunrise/sunset, wind, etc.)"
+          type="number"
+          .value="${this._config.attr_icon_size || '15'}"
+          @change="${(e) => this._valueChanged(e, 'attr_icon_size')}"
+        ></ha-textfield>
           <ha-textfield
-            label="Curent temperature Font Size"
-           type="number"
-            .value="${this._config.current_temp_size || '28'}"
-            @change="${(e) => this._valueChanged(e, 'current_temp_size')}"
+             label="Curent temperature Font Size"
+            type="number"
+             .value="${this._config.current_temp_size || '28'}"
+             @change="${(e) => this._valueChanged(e, 'current_temp_size')}"
+           ></ha-textfield>
+          <ha-textfield
+            label="Weather condition text font size"
+            type="number"
+            .value="${this._config.condition_font_size || '18'}"
+            @change="${(e) => this._valueChanged(e, 'condition_font_size')}"
+          ></ha-textfield>
+          <ha-textfield
+            label="Temperature unit font size"
+            type="number"
+            .value="${this._config.temp_unit_font_size || '18'}"
+            @change="${(e) => this._valueChanged(e, 'temp_unit_font_size')}"
+          ></ha-textfield>
+          <ha-textfield
+            label="Attributes font size (humidity, pressure, UV, sunrise/sunset, wind, etc.)"
+            type="number"
+            .value="${this._config.attributes_font_size || '13'}"
+            @change="${(e) => this._valueChanged(e, 'attributes_font_size')}"
           ></ha-textfield>
         <ha-textfield
           label="Custom icon path"
@@ -737,13 +769,49 @@ class WeatherChartCardEditor extends LitElement {
                 .value="${forecastConfig.labels_font_size || '11'}"
                 @change="${(e) => this._valueChanged(e, 'forecast.labels_font_size')}"
               ></ha-textfield>
-              </div>
-            <ha-textfield
-              label="Datetime Font Size"
-              type="number"
-              .value="${forecastConfig.chart_datetime_font_size || '10'}"
-              @change="${(e) => this._valueChanged(e, 'forecast.chart_datetime_font_size')}"
-            ></ha-textfield>
+            </div>
+            <div class="flex-container">
+              <ha-textfield
+                label="Datetime Font Size"
+                type="number"
+                .value="${forecastConfig.chart_datetime_font_size || '10'}"
+                @change="${(e) => this._valueChanged(e, 'forecast.chart_datetime_font_size')}"
+              ></ha-textfield>
+              <ha-textfield
+                label="Precipitation Label Font Size"
+                type="number"
+                .value="${forecastConfig.precip_label_font_size || '11'}"
+                @change="${(e) => this._valueChanged(e, 'forecast.precip_label_font_size')}"
+              ></ha-textfield>
+            </div>
+            <div class="flex-container">
+              <ha-textfield
+                label="Forecast Icon Size"
+                type="number"
+                .value="${forecastConfig.forecast_icon_size || '30'}"
+                @change="${(e) => this._valueChanged(e, 'forecast.forecast_icon_size')}"
+              ></ha-textfield>
+              <ha-textfield
+                label="Wind Icon Size"
+                type="number"
+                .value="${forecastConfig.wind_icon_size || '18'}"
+                @change="${(e) => this._valueChanged(e, 'forecast.wind_icon_size')}"
+              ></ha-textfield>
+            </div>
+            <div class="flex-container">
+              <ha-textfield
+                label="Wind Speed Font Size"
+                type="number"
+                .value="${forecastConfig.wind_speed_font_size || '13'}"
+                @change="${(e) => this._valueChanged(e, 'forecast.wind_speed_font_size')}"
+              ></ha-textfield>
+              <ha-textfield
+                label="Wind Unit Font Size"
+                type="number"
+                .value="${forecastConfig.wind_unit_font_size || '13'}"
+                @change="${(e) => this._valueChanged(e, 'forecast.wind_unit_font_size')}"
+              ></ha-textfield>
+            </div>
 	    <div class="flex-container">
               <ha-textfield
                 label="Chart height"
