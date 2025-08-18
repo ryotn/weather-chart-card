@@ -612,6 +612,18 @@ class WeatherChartCardEditor extends LitElement {
            .value="${this._config.icons_size || '25'}"
            @change="${(e) => this._valueChanged(e, 'icons_size')}"
          ></ha-textfield>
+        <ha-textfield
+          label="Today's weather icon size"
+          type="number"
+          .value="${this._config.main_icon_size || '50'}"
+          @change="${(e) => this._valueChanged(e, 'main_icon_size')}"
+        ></ha-textfield>
+        <ha-textfield
+          label="Attributes icon size (humidity, pressure, UV, sunrise/sunset, wind, etc.)"
+          type="number"
+          .value="${this._config.attr_icon_size || '15'}"
+          @change="${(e) => this._valueChanged(e, 'attr_icon_size')}"
+        ></ha-textfield>
           <ha-textfield
              label="Curent temperature Font Size"
             type="number"

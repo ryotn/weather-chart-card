@@ -1509,6 +1509,18 @@ class WeatherChartCardEditor extends s {
            .value="${this._config.icons_size || '25'}"
            @change="${(e) => this._valueChanged(e, 'icons_size')}"
          ></ha-textfield>
+        <ha-textfield
+          label="Today's weather icon size"
+          type="number"
+          .value="${this._config.main_icon_size || '50'}"
+          @change="${(e) => this._valueChanged(e, 'main_icon_size')}"
+        ></ha-textfield>
+        <ha-textfield
+          label="Attributes icon size (humidity, pressure, UV, sunrise/sunset, wind, etc.)"
+          type="number"
+          .value="${this._config.attr_icon_size || '15'}"
+          @change="${(e) => this._valueChanged(e, 'attr_icon_size')}"
+        ></ha-textfield>
           <ha-textfield
              label="Curent temperature Font Size"
             type="number"
@@ -18084,6 +18096,8 @@ class WeatherChartCard extends s {
   setConfig(config) {
     const cardConfig = {
       icons_size: 25,
+      main_icon_size: 50,
+      attr_icon_size: 15,
       animated_icons: false,
       icon_style: 'style1',
       current_temp_size: 28,
@@ -18872,14 +18886,14 @@ class WeatherChartCard extends s {
           margin-bottom: 10px;
         }
         .main ha-icon {
-          --mdc-icon-size: 50px;
+          --mdc-icon-size: ${config.main_icon_size || 50}px;
           margin-right: 14px;
           margin-inline-start: initial;
           margin-inline-end: 14px;
         }
         .main img {
-          width: ${config.icons_size * 2}px;
-          height: ${config.icons_size * 2}px;
+          width: ${config.main_icon_size || 50}px;
+          height: ${config.main_icon_size || 50}px;
           margin-right: 14px;
           margin-inline-start: initial;
           margin-inline-end: 14px;
@@ -18902,6 +18916,9 @@ class WeatherChartCard extends s {
           font-weight: 300;
           direction: ltr;
           font-size: ${config.attributes_font_size || 13}px;
+        }
+        .attributes ha-icon {
+          --mdc-icon-size: ${config.attr_icon_size || 15}px;
         }
         .chart-container {
           position: relative;
