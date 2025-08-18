@@ -1,6 +1,7 @@
 import { LitElement, html } from 'lit';
 
 
+
 const ALT_SCHEMA = [
   { name: "temp", title: "Alternative temperature sensor", selector: { entity: { domain: 'sensor' } } },
   { name: "feels_like", title: "Alternative feels like temperature sensor", selector: { entity: { domain: 'sensor' } } },
@@ -781,6 +782,34 @@ class WeatherChartCardEditor extends LitElement {
                 type="number"
                 .value="${forecastConfig.precip_label_font_size || '11'}"
                 @change="${(e) => this._valueChanged(e, 'forecast.precip_label_font_size')}"
+              ></ha-textfield>
+            </div>
+            <div class="flex-container">
+              <ha-textfield
+                label="Forecast Icon Size"
+                type="number"
+                .value="${forecastConfig.forecast_icon_size || '30'}"
+                @change="${(e) => this._valueChanged(e, 'forecast.forecast_icon_size')}"
+              ></ha-textfield>
+              <ha-textfield
+                label="Wind Icon Size"
+                type="number"
+                .value="${forecastConfig.wind_icon_size || '18'}"
+                @change="${(e) => this._valueChanged(e, 'forecast.wind_icon_size')}"
+              ></ha-textfield>
+            </div>
+            <div class="flex-container">
+              <ha-textfield
+                label="Wind Speed Font Size"
+                type="number"
+                .value="${forecastConfig.wind_speed_font_size || '13'}"
+                @change="${(e) => this._valueChanged(e, 'forecast.wind_speed_font_size')}"
+              ></ha-textfield>
+              <ha-textfield
+                label="Wind Unit Font Size"
+                type="number"
+                .value="${forecastConfig.wind_unit_font_size || '13'}"
+                @change="${(e) => this._valueChanged(e, 'forecast.wind_unit_font_size')}"
               ></ha-textfield>
             </div>
 	    <div class="flex-container">
