@@ -108,6 +108,7 @@ class WeatherChartCard extends LitElement {
         precipitation_type: 'rainfall',
         show_probability: false,
         labels_font_size: 11,
+        precip_label_font_size: 11,
         chart_datetime_font_size: 10,
         chart_height: 180,
         precip_bar_size: 100,
@@ -601,6 +602,10 @@ class WeatherChartCard extends LitElement {
           align: 'top',
           anchor: 'start',
           offset: -10,
+          font: {
+            size: parseInt(config.forecast.precip_label_font_size) || 11,
+            lineHeight: 0.7,
+          },
         },
       },
     ];

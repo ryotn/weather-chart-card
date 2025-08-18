@@ -1,5 +1,6 @@
 import { LitElement, html } from 'lit';
 
+
 const ALT_SCHEMA = [
   { name: "temp", title: "Alternative temperature sensor", selector: { entity: { domain: 'sensor' } } },
   { name: "feels_like", title: "Alternative feels like temperature sensor", selector: { entity: { domain: 'sensor' } } },
@@ -767,13 +768,21 @@ class WeatherChartCardEditor extends LitElement {
                 .value="${forecastConfig.labels_font_size || '11'}"
                 @change="${(e) => this._valueChanged(e, 'forecast.labels_font_size')}"
               ></ha-textfield>
-              </div>
-            <ha-textfield
-              label="Datetime Font Size"
-              type="number"
-              .value="${forecastConfig.chart_datetime_font_size || '10'}"
-              @change="${(e) => this._valueChanged(e, 'forecast.chart_datetime_font_size')}"
-            ></ha-textfield>
+            </div>
+            <div class="flex-container">
+              <ha-textfield
+                label="Datetime Font Size"
+                type="number"
+                .value="${forecastConfig.chart_datetime_font_size || '10'}"
+                @change="${(e) => this._valueChanged(e, 'forecast.chart_datetime_font_size')}"
+              ></ha-textfield>
+              <ha-textfield
+                label="Precipitation Label Font Size"
+                type="number"
+                .value="${forecastConfig.precip_label_font_size || '11'}"
+                @change="${(e) => this._valueChanged(e, 'forecast.precip_label_font_size')}"
+              ></ha-textfield>
+            </div>
 	    <div class="flex-container">
               <ha-textfield
                 label="Chart height"
