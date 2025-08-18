@@ -554,9 +554,22 @@ drawChart({ config, language, weather, forecastItems } = this) {
       barPercentage: config.forecast.precip_bar_size / 100,
       categoryPercentage: 1.0,
       datalabels: {
-        display: function (context) {
-          return context.dataset.data[context.dataIndex] > 0 ? 'true' : false;
-        },
+          display: function (context) {
+            // 降水量が0でも降水確率が1%以上なら表示
+            const precipitationType = config.forecast.precipitation_type;
+            const rainfall = context.dataset.data[context.dataIndex];
+            const probability = data.forecast[context.dataIndex].precipitation_probability;
+            if (
+              precipitationType === 'rainfall' &&
+              config.forecast.show_probability &&
+              probability !== undefined &&
+              probability !== null &&
+              probability >= 1
+            ) {
+              return true;
+            }
+            return rainfall > 0;
+          },
       formatter: function (value, context) {
         const precipitationType = config.forecast.precipitation_type;
 
