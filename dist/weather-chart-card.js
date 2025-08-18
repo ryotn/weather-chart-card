@@ -18475,7 +18475,7 @@ class WeatherChartCard extends s {
     const data = this.computeForecastData();
 
     var style = getComputedStyle(document.body);
-    var backgroundColor = style.getPropertyValue('--card-background-color');
+    style.getPropertyValue('--card-background-color');
     var textColor = style.getPropertyValue('--primary-text-color');
     var dividerColor = style.getPropertyValue('--divider-color');
     const canvas = this.renderRoot.querySelector('#forecastChart');
@@ -18712,21 +18712,6 @@ class WeatherChartCard extends s {
           legend: {
             display: false,
           },
-          datalabels: {
-            backgroundColor: backgroundColor,
-            borderColor: context => context.dataset.backgroundColor,
-            borderRadius: 0,
-            borderWidth: 1.5,
-            padding: config.forecast.precipitation_type === 'rainfall' && config.forecast.show_probability && config.forecast.type !== 'hourly' ? 3 : 4,
-            color: chart_text_color || textColor,
-            font: {
-              size: config.forecast.labels_font_size,
-              lineHeight: 0.7,
-            },
-            formatter: function (value, context) {
-              return context.dataset.data[context.dataIndex] + '°';
-            },
-          },
           tooltip: {
             caretSize: 0,
             caretPadding: 15,
@@ -18764,13 +18749,11 @@ class WeatherChartCard extends s {
   computeForecastData({ config, forecastItems } = this) {
     let forecast = this.forecasts ? [...this.forecasts] : [];
 
-    // autoscrollが有効な場合、まず過去の予報をすべて除外します。
     if (config.autoscroll) {
       const now = new Date();
       forecast = forecast.filter(d => new Date(d.datetime) >= now);
     }
 
-    // その後、表示する数だけデータを切り出します。
     forecast = forecast.slice(0, forecastItems);
 
     var roundTemp = config.forecast.round_temp == true;
