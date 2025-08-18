@@ -18926,6 +18926,7 @@ class WeatherChartCard extends s {
         }
         .main {
           display: flex;
+          justify-content: space-between;
           align-items: center;
           font-size: ${config.current_temp_size}px;
           margin-bottom: 10px;
@@ -19021,12 +19022,13 @@ class WeatherChartCard extends s {
           margin-inline-end: initial;
         }
         .current-time {
-          position: absolute;
-          top: 20px;
-          right: 16px;
-          inset-inline-start: initial;
-          inset-inline-end: 16px;
+          /* position: absolute; を削除 */
           font-size: ${config.time_size}px;
+          text-align: right;
+          display: flex;
+          flex-direction: column;
+          align-items: flex-end;
+          gap: 2px;
         }
         .date-text {
           font-size: ${config.day_date_size}px;
@@ -19140,10 +19142,12 @@ class WeatherChartCard extends s {
 
     return x`
     <div class="main">
-      ${iconHtml}
-      <div>
-        <div>
-          ${showTemperature ? x`${roundedTemperature}<span class="temp-unit">${this.getUnit('temperature')}</span>` : ''}
+      <div class="main-left" style="display: flex; align-items: center;">
+        ${iconHtml}
+        <div style="display: flex; flex-direction: column; justify-content: center;">
+          <div style="display: flex; align-items: baseline;">
+            ${showTemperature ? x`${roundedTemperature}<span class="temp-unit">${this.getUnit('temperature')}</span>` : ''}
+          </div>
           ${showFeelsLike && roundedFeelsLike ? x`
             <div class="feels-like">
               ${this.ll('feelsLike')}
@@ -19161,15 +19165,15 @@ class WeatherChartCard extends s {
             </div>
           ` : ''}
         </div>
-        ${showTime ? x`
-          <div class="current-time">
-            <div id="digital-clock"></div>
-            ${showDay ? x`<div class="date-text day"></div>` : ''}
-            ${showDay && showDate ? x` ` : ''}
-            ${showDate ? x`<div class="date-text date"></div>` : ''}
-          </div>
-        ` : ''}
       </div>
+      ${showTime ? x`
+        <div class="current-time">
+          <div id="digital-clock"></div>
+          ${showDay ? x`<div class="date-text day"></div>` : ''}
+          ${showDay && showDate ? x` ` : ''}
+          ${showDate ? x`<div class="date-text date"></div>` : ''}
+        </div>
+      ` : ''}
     </div>
   `;
   }
