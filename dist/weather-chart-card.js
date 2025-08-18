@@ -1510,10 +1510,28 @@ class WeatherChartCardEditor extends s {
            @change="${(e) => this._valueChanged(e, 'icons_size')}"
          ></ha-textfield>
           <ha-textfield
-            label="Curent temperature Font Size"
-           type="number"
-            .value="${this._config.current_temp_size || '28'}"
-            @change="${(e) => this._valueChanged(e, 'current_temp_size')}"
+             label="Curent temperature Font Size"
+            type="number"
+             .value="${this._config.current_temp_size || '28'}"
+             @change="${(e) => this._valueChanged(e, 'current_temp_size')}"
+           ></ha-textfield>
+          <ha-textfield
+            label="Weather condition text font size"
+            type="number"
+            .value="${this._config.condition_font_size || '18'}"
+            @change="${(e) => this._valueChanged(e, 'condition_font_size')}"
+          ></ha-textfield>
+          <ha-textfield
+            label="Temperature unit font size"
+            type="number"
+            .value="${this._config.temp_unit_font_size || '18'}"
+            @change="${(e) => this._valueChanged(e, 'temp_unit_font_size')}"
+          ></ha-textfield>
+          <ha-textfield
+            label="Attributes font size (humidity, pressure, UV, sunrise/sunset, wind, etc.)"
+            type="number"
+            .value="${this._config.attributes_font_size || '13'}"
+            @change="${(e) => this._valueChanged(e, 'attributes_font_size')}"
           ></ha-textfield>
         <ha-textfield
           label="Custom icon path"
@@ -18069,6 +18087,9 @@ class WeatherChartCard extends s {
       animated_icons: false,
       icon_style: 'style1',
       current_temp_size: 28,
+      condition_font_size: 18,
+      temp_unit_font_size: 18,
+      attributes_font_size: 13,
       time_size: 26,
       day_date_size: 15,
       show_feels_like: false,
@@ -18866,8 +18887,11 @@ class WeatherChartCard extends s {
         .main div {
           line-height: 0.9;
         }
-        .main span {
-          font-size: 18px;
+        .main .current-condition {
+          font-size: ${config.condition_font_size || 18}px;
+        }
+        .main .temp-unit {
+          font-size: ${config.temp_unit_font_size || 18}px;
           color: var(--secondary-text-color);
         }
         .attributes {
@@ -18875,8 +18899,9 @@ class WeatherChartCard extends s {
           justify-content: space-between;
           align-items: center;
           margin-bottom: 6px;
-      	  font-weight: 300;
+          font-weight: 300;
           direction: ltr;
+          font-size: ${config.attributes_font_size || 13}px;
         }
         .chart-container {
           position: relative;
@@ -19056,7 +19081,7 @@ class WeatherChartCard extends s {
       ${iconHtml}
       <div>
         <div>
-          ${showTemperature ? x`${roundedTemperature}<span>${this.getUnit('temperature')}</span>` : ''}
+          ${showTemperature ? x`${roundedTemperature}<span class="temp-unit">${this.getUnit('temperature')}</span>` : ''}
           ${showFeelsLike && roundedFeelsLike ? x`
             <div class="feels-like">
               ${this.ll('feelsLike')}

@@ -613,10 +613,28 @@ class WeatherChartCardEditor extends LitElement {
            @change="${(e) => this._valueChanged(e, 'icons_size')}"
          ></ha-textfield>
           <ha-textfield
-            label="Curent temperature Font Size"
-           type="number"
-            .value="${this._config.current_temp_size || '28'}"
-            @change="${(e) => this._valueChanged(e, 'current_temp_size')}"
+             label="Curent temperature Font Size"
+            type="number"
+             .value="${this._config.current_temp_size || '28'}"
+             @change="${(e) => this._valueChanged(e, 'current_temp_size')}"
+           ></ha-textfield>
+          <ha-textfield
+            label="Weather condition text font size"
+            type="number"
+            .value="${this._config.condition_font_size || '18'}"
+            @change="${(e) => this._valueChanged(e, 'condition_font_size')}"
+          ></ha-textfield>
+          <ha-textfield
+            label="Temperature unit font size"
+            type="number"
+            .value="${this._config.temp_unit_font_size || '18'}"
+            @change="${(e) => this._valueChanged(e, 'temp_unit_font_size')}"
+          ></ha-textfield>
+          <ha-textfield
+            label="Attributes font size (humidity, pressure, UV, sunrise/sunset, wind, etc.)"
+            type="number"
+            .value="${this._config.attributes_font_size || '13'}"
+            @change="${(e) => this._valueChanged(e, 'attributes_font_size')}"
           ></ha-textfield>
         <ha-textfield
           label="Custom icon path"
