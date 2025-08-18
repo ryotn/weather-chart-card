@@ -69,7 +69,7 @@ class WeatherChartCardEditor extends LitElement {
       this.hass.states[config.entity].attributes &&
       this.hass.states[config.entity].attributes.description !== undefined
     ) || config.description !== undefined;
-    this.fetchEntities();	  
+    this.fetchEntities();
     this.requestUpdate();
   }
 
