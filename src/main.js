@@ -15,6 +15,47 @@ Chart.register(...registerables, ChartDataLabels);
 
 class WeatherChartCard extends LitElement {
 
+  updateClock() {
+    const config = this.config || {};
+    const use12HourFormat = config.use_12hour_format;
+    const showTime = config.show_time;
+    const showDay = config.show_day;
+    const showDate = config.show_date;
+    const showSeconds = config.show_time_seconds === true;
+    if (!showTime) return;
+
+    const currentDate = new Date();
+    const timeOptions = {
+      hour12: use12HourFormat,
+      hour: 'numeric',
+      minute: 'numeric',
+      second: showSeconds ? 'numeric' : undefined
+    };
+    const currentTime = currentDate.toLocaleTimeString(this.language, timeOptions);
+    const currentDayOfWeek = currentDate.toLocaleString(this.language, { weekday: 'long' }).toUpperCase();
+    const currentDateFormatted = currentDate.toLocaleDateString(this.language, { month: 'long', day: 'numeric' });
+
+    const mainDiv = this.shadowRoot && this.shadowRoot.querySelector('.main');
+    if (mainDiv) {
+      const clockElement = mainDiv.querySelector('#digital-clock');
+      if (clockElement) {
+        clockElement.textContent = currentTime;
+      }
+      if (showDay) {
+        const dayElement = mainDiv.querySelector('.date-text.day');
+        if (dayElement) {
+          dayElement.textContent = currentDayOfWeek;
+        }
+      }
+      if (showDate) {
+        const dateElement = mainDiv.querySelector('.date-text.date');
+        if (dateElement) {
+          dateElement.textContent = currentDateFormatted;
+        }
+      }
+    }
+  }
+
   static getConfigElement() {
     return document.createElement("weather-chart-card-editor");
   }
@@ -231,6 +272,13 @@ class WeatherChartCard extends LitElement {
     if (!this.resizeInitialized) {
       this.delayedAttachResizeObserver();
     }
+    // 時計interval管理
+    if (this.clockInterval) {
+      clearInterval(this.clockInterval);
+      this.clockInterval = null;
+    }
+    this.updateClock();
+    this.clockInterval = setInterval(() => this.updateClock(), 1000);
   }
 
   delayedAttachResizeObserver() {
@@ -1024,13 +1072,9 @@ class WeatherChartCard extends LitElement {
   }
 
   renderMain({ config, sun, weather, temperature, feels_like, description } = this) {
+
     if (config.show_main === false)
       return html``;
-
-    if (this.clockInterval) {
-      clearInterval(this.clockInterval);
-      this.clockInterval = null;
-    }
 
     const use12HourFormat = config.use_12hour_format;
     const showTime = config.show_time;
@@ -1055,45 +1099,6 @@ class WeatherChartCard extends LitElement {
     const iconHtml = config.animated_icons || config.icons
       ? html`<img src="${this.getWeatherIcon(weather.state, sun.state)}" alt="">`
       : html`<ha-icon icon="${this.getWeatherIcon(weather.state, sun.state)}"></ha-icon>`;
-
-    const updateClock = () => {
-      const currentDate = new Date();
-      const timeOptions = {
-        hour12: use12HourFormat,
-        hour: 'numeric',
-        minute: 'numeric',
-        second: showSeconds ? 'numeric' : undefined
-      };
-      const currentTime = currentDate.toLocaleTimeString(this.language, timeOptions);
-      const currentDayOfWeek = currentDate.toLocaleString(this.language, { weekday: 'long' }).toUpperCase();
-      const currentDateFormatted = currentDate.toLocaleDateString(this.language, { month: 'long', day: 'numeric' });
-
-      const mainDiv = this.shadowRoot.querySelector('.main');
-      if (mainDiv) {
-        const clockElement = mainDiv.querySelector('#digital-clock');
-        if (clockElement) {
-          clockElement.textContent = currentTime;
-        }
-        if (showDay) {
-          const dayElement = mainDiv.querySelector('.date-text.day');
-          if (dayElement) {
-            dayElement.textContent = currentDayOfWeek;
-          }
-        }
-        if (showDate) {
-          const dateElement = mainDiv.querySelector('.date-text.date');
-          if (dateElement) {
-            dateElement.textContent = currentDateFormatted;
-          }
-        }
-      }
-    };
-
-    updateClock();
-
-    if (showTime) {
-      this.clockInterval = setInterval(updateClock, 1000);
-    }
 
     return html`
     <div class="main">
