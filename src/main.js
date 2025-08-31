@@ -670,6 +670,8 @@ class WeatherChartCard extends LitElement {
             size: parseInt(config.forecast.precip_label_font_size) || 11,
             lineHeight: 0.7,
           },
+          textStrokeColor: 'black',
+          textStrokeWidth: 2,
         },
       },
     ];
@@ -687,7 +689,8 @@ class WeatherChartCard extends LitElement {
         align: 'top',
         anchor: 'center',
         backgroundColor: 'transparent',
-        borderColor: 'transparent',
+        textStrokeColor: 'black',
+        textStrokeWidth: 2,
         color: chart_text_color || config.forecast.temperature1_color,
         font: {
           size: parseInt(config.forecast.labels_font_size) + 1,
@@ -705,7 +708,8 @@ class WeatherChartCard extends LitElement {
         align: 'bottom',
         anchor: 'center',
         backgroundColor: 'transparent',
-        borderColor: 'transparent',
+        textStrokeColor: 'black',
+        textStrokeWidth: 2,
         color: chart_text_color || config.forecast.temperature2_color,
         font: {
           size: parseInt(config.forecast.labels_font_size) + 1,
