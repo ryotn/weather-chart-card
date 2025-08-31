@@ -18060,6 +18060,47 @@ Chart.register(...registerables, plugin);
 
 class WeatherChartCard extends s {
 
+  updateClock() {
+    const config = this.config || {};
+    const use12HourFormat = config.use_12hour_format;
+    const showTime = config.show_time;
+    const showDay = config.show_day;
+    const showDate = config.show_date;
+    const showSeconds = config.show_time_seconds === true;
+    if (!showTime) return;
+
+    const currentDate = new Date();
+    const timeOptions = {
+      hour12: use12HourFormat,
+      hour: 'numeric',
+      minute: 'numeric',
+      second: showSeconds ? 'numeric' : undefined
+    };
+    const currentTime = currentDate.toLocaleTimeString(this.language, timeOptions);
+    const currentDayOfWeek = currentDate.toLocaleString(this.language, { weekday: 'long' }).toUpperCase();
+    const currentDateFormatted = currentDate.toLocaleDateString(this.language, { month: 'long', day: 'numeric' });
+
+    const mainDiv = this.shadowRoot && this.shadowRoot.querySelector('.main');
+    if (mainDiv) {
+      const clockElement = mainDiv.querySelector('#digital-clock');
+      if (clockElement) {
+        clockElement.textContent = currentTime;
+      }
+      if (showDay) {
+        const dayElement = mainDiv.querySelector('.date-text.day');
+        if (dayElement) {
+          dayElement.textContent = currentDayOfWeek;
+        }
+      }
+      if (showDate) {
+        const dateElement = mainDiv.querySelector('.date-text.date');
+        if (dateElement) {
+          dateElement.textContent = currentDateFormatted;
+        }
+      }
+    }
+  }
+
   static getConfigElement() {
     return document.createElement("weather-chart-card-editor");
   }
@@ -18149,30 +18190,30 @@ class WeatherChartCard extends s {
       show_last_changed: false,
       show_description: false,
       ...config,
-        forecast: {
-          precipitation_type: 'rainfall',
-          show_probability: false,
-          labels_font_size: 11,
-          precip_label_font_size: 11,
-          chart_datetime_font_size: 10,
-          chart_height: 180,
-          precip_bar_size: 100,
-          forecast_icon_size: 30,
-          wind_icon_size: 18,
-          wind_speed_font_size: 13,
-          wind_unit_font_size: 13,
-          style: 'style1',
-          temperature1_color: 'rgba(255, 152, 0, 1.0)',
-          temperature2_color: 'rgba(68, 115, 158, 1.0)',
-          precipitation_color: 'rgba(132, 209, 253, 1.0)',
-          condition_icons: true,
-          show_wind_forecast: true,
-          round_temp: false,
-          type: 'daily',
-          number_of_forecasts: '0',
-          '12hourformat': false,
-          ...config.forecast,
-        },
+      forecast: {
+        precipitation_type: 'rainfall',
+        show_probability: false,
+        labels_font_size: 11,
+        precip_label_font_size: 11,
+        chart_datetime_font_size: 10,
+        chart_height: 180,
+        precip_bar_size: 100,
+        forecast_icon_size: 30,
+        wind_icon_size: 18,
+        wind_speed_font_size: 13,
+        wind_unit_font_size: 13,
+        style: 'style1',
+        temperature1_color: 'rgba(255, 152, 0, 1.0)',
+        temperature2_color: 'rgba(68, 115, 158, 1.0)',
+        precipitation_color: 'rgba(132, 209, 253, 1.0)',
+        condition_icons: true,
+        show_wind_forecast: true,
+        round_temp: false,
+        type: 'daily',
+        number_of_forecasts: '0',
+        '12hourformat': false,
+        ...config.forecast,
+      },
       units: {
         pressure: 'hPa',
         ...config.units,
@@ -18269,6 +18310,7 @@ class WeatherChartCard extends s {
     this.resizeObserver = null;
     this.resizeInitialized = false;
     this.clockInterval = null;
+    this.hourlyUpdateInterval = null;
   }
 
   connectedCallback() {
@@ -18276,6 +18318,20 @@ class WeatherChartCard extends s {
     if (!this.resizeInitialized) {
       this.delayedAttachResizeObserver();
     }
+    // 時計interval管理
+    if (this.clockInterval) {
+      clearInterval(this.clockInterval);
+      this.clockInterval = null;
+    }
+    this.updateClock();
+    this.clockInterval = setInterval(() => this.updateClock(), 1000);
+
+    // 1時間おきにrequestUpdate
+    if (this.hourlyUpdateInterval) {
+      clearInterval(this.hourlyUpdateInterval);
+      this.hourlyUpdateInterval = null;
+    }
+    this.hourlyUpdateInterval = setInterval(() => this.requestUpdate(), 30 * 60 * 1000);
   }
 
   delayedAttachResizeObserver() {
@@ -18296,6 +18352,10 @@ class WeatherChartCard extends s {
     if (this.clockInterval) {
       clearInterval(this.clockInterval);
       this.clockInterval = null;
+    }
+    if (this.hourlyUpdateInterval) {
+      clearInterval(this.hourlyUpdateInterval);
+      this.hourlyUpdateInterval = null;
     }
   }
 
@@ -19069,15 +19129,11 @@ class WeatherChartCard extends s {
   }
 
   renderMain({ config, sun, weather, temperature, feels_like, description } = this) {
+
     if (config.show_main === false)
       return x``;
 
-    if (this.clockInterval) {
-      clearInterval(this.clockInterval);
-      this.clockInterval = null;
-    }
-
-    const use12HourFormat = config.use_12hour_format;
+    config.use_12hour_format;
     const showTime = config.show_time;
     const showDay = config.show_day;
     const showDate = config.show_date;
@@ -19085,7 +19141,7 @@ class WeatherChartCard extends s {
     const showDescription = config.show_description;
     const showCurrentCondition = config.show_current_condition !== false;
     const showTemperature = config.show_temperature !== false;
-    const showSeconds = config.show_time_seconds === true;
+    config.show_time_seconds === true;
 
     let roundedTemperature = parseFloat(temperature);
     if (!isNaN(roundedTemperature) && roundedTemperature % 1 !== 0) {
@@ -19100,45 +19156,6 @@ class WeatherChartCard extends s {
     const iconHtml = config.animated_icons || config.icons
       ? x`<img src="${this.getWeatherIcon(weather.state, sun.state)}" alt="">`
       : x`<ha-icon icon="${this.getWeatherIcon(weather.state, sun.state)}"></ha-icon>`;
-
-    const updateClock = () => {
-      const currentDate = new Date();
-      const timeOptions = {
-        hour12: use12HourFormat,
-        hour: 'numeric',
-        minute: 'numeric',
-        second: showSeconds ? 'numeric' : undefined
-      };
-      const currentTime = currentDate.toLocaleTimeString(this.language, timeOptions);
-      const currentDayOfWeek = currentDate.toLocaleString(this.language, { weekday: 'long' }).toUpperCase();
-      const currentDateFormatted = currentDate.toLocaleDateString(this.language, { month: 'long', day: 'numeric' });
-
-      const mainDiv = this.shadowRoot.querySelector('.main');
-      if (mainDiv) {
-        const clockElement = mainDiv.querySelector('#digital-clock');
-        if (clockElement) {
-          clockElement.textContent = currentTime;
-        }
-        if (showDay) {
-          const dayElement = mainDiv.querySelector('.date-text.day');
-          if (dayElement) {
-            dayElement.textContent = currentDayOfWeek;
-          }
-        }
-        if (showDate) {
-          const dateElement = mainDiv.querySelector('.date-text.date');
-          if (dateElement) {
-            dateElement.textContent = currentDateFormatted;
-          }
-        }
-      }
-    };
-
-    updateClock();
-
-    if (showTime) {
-      this.clockInterval = setInterval(updateClock, 1000);
-    }
 
     return x`
     <div class="main">
@@ -19339,49 +19356,49 @@ class WeatherChartCard extends s {
     return x`
     <div class="conditions" @click="${(e) => this.showMoreInfo(config.entity)}">
       ${forecast.map((item) => {
-        const forecastTime = new Date(item.datetime);
-        const sunriseTime = new Date(sun.attributes.next_rising);
-        const sunsetTime = new Date(sun.attributes.next_setting);
+      const forecastTime = new Date(item.datetime);
+      const sunriseTime = new Date(sun.attributes.next_rising);
+      const sunsetTime = new Date(sun.attributes.next_setting);
 
-        // Adjust sunrise and sunset times to match the date of forecastTime
-        const adjustedSunriseTime = new Date(forecastTime);
-        adjustedSunriseTime.setHours(sunriseTime.getHours());
-        adjustedSunriseTime.setMinutes(sunriseTime.getMinutes());
-        adjustedSunriseTime.setSeconds(sunriseTime.getSeconds());
+      // Adjust sunrise and sunset times to match the date of forecastTime
+      const adjustedSunriseTime = new Date(forecastTime);
+      adjustedSunriseTime.setHours(sunriseTime.getHours());
+      adjustedSunriseTime.setMinutes(sunriseTime.getMinutes());
+      adjustedSunriseTime.setSeconds(sunriseTime.getSeconds());
 
-        const adjustedSunsetTime = new Date(forecastTime);
-        adjustedSunsetTime.setHours(sunsetTime.getHours());
-        adjustedSunsetTime.setMinutes(sunsetTime.getMinutes());
-        adjustedSunsetTime.setSeconds(sunsetTime.getSeconds());
+      const adjustedSunsetTime = new Date(forecastTime);
+      adjustedSunsetTime.setHours(sunsetTime.getHours());
+      adjustedSunsetTime.setMinutes(sunsetTime.getMinutes());
+      adjustedSunsetTime.setSeconds(sunsetTime.getSeconds());
 
-        let isDayTime;
+      let isDayTime;
 
-        if (config.forecast.type === 'daily') {
-          isDayTime = true;
-        } else {
-          isDayTime = forecastTime >= adjustedSunriseTime && forecastTime <= adjustedSunsetTime;
-        }
+      if (config.forecast.type === 'daily') {
+        isDayTime = true;
+      } else {
+        isDayTime = forecastTime >= adjustedSunriseTime && forecastTime <= adjustedSunsetTime;
+      }
 
-        const weatherIcons = isDayTime ? weatherIconsDay : weatherIconsNight;
-        const condition = item.condition;
+      const weatherIcons = isDayTime ? weatherIconsDay : weatherIconsNight;
+      const condition = item.condition;
 
-        let iconHtml;
+      let iconHtml;
 
-        if (config.animated_icons || config.icons) {
-          const iconSrc = config.animated_icons ?
-            `${this.baseIconPath}${weatherIcons[condition]}.svg` :
-            `${this.config.icons}${weatherIcons[condition]}.svg`;
-          iconHtml = x`<img class="icon" src="${iconSrc}" alt="" style="width: ${iconSize}px; height: ${iconSize}px;">`;
-        } else {
-          iconHtml = x`<ha-icon icon="${this.getWeatherIcon(condition, sun.state)}" style="--mdc-icon-size: ${iconSize}px;"></ha-icon>`;
-        }
+      if (config.animated_icons || config.icons) {
+        const iconSrc = config.animated_icons ?
+          `${this.baseIconPath}${weatherIcons[condition]}.svg` :
+          `${this.config.icons}${weatherIcons[condition]}.svg`;
+        iconHtml = x`<img class="icon" src="${iconSrc}" alt="" style="width: ${iconSize}px; height: ${iconSize}px;">`;
+      } else {
+        iconHtml = x`<ha-icon icon="${this.getWeatherIcon(condition, sun.state)}" style="--mdc-icon-size: ${iconSize}px;"></ha-icon>`;
+      }
 
-        return x`
+      return x`
             <div class="forecast-item">
               ${iconHtml}
             </div>
           `;
-      })}
+    })}
     </div>
   `;
   }
@@ -19395,49 +19412,49 @@ class WeatherChartCard extends s {
 
     const forecast = this.forecasts ? this.forecasts.slice(0, forecastItems) : [];
 
-  const windIconSize = config.forecast.wind_icon_size || 18;
-  const windSpeedFontSize = config.forecast.wind_speed_font_size || 13;
-  const windUnitFontSize = config.forecast.wind_unit_font_size || 13;
+    const windIconSize = config.forecast.wind_icon_size || 18;
+    const windSpeedFontSize = config.forecast.wind_speed_font_size || 13;
+    const windUnitFontSize = config.forecast.wind_unit_font_size || 13;
     return x`
     <div class="wind-details">
       ${showWindForecast ? x`
         ${forecast.map((item) => {
-          let dWindSpeed = item.wind_speed;
+      let dWindSpeed = item.wind_speed;
 
-          if (this.unitSpeed !== this.weather.attributes.wind_speed_unit) {
-            if (this.unitSpeed === 'm/s') {
-              if (this.weather.attributes.wind_speed_unit === 'km/h') {
-                dWindSpeed = Math.round(item.wind_speed * 1000 / 3600);
-              } else if (this.weather.attributes.wind_speed_unit === 'mph') {
-                dWindSpeed = Math.round(item.wind_speed * 0.44704);
-              }
-            } else if (this.unitSpeed === 'km/h') {
-              if (this.weather.attributes.wind_speed_unit === 'm/s') {
-                dWindSpeed = Math.round(item.wind_speed * 3.6);
-              } else if (this.weather.attributes.wind_speed_unit === 'mph') {
-                dWindSpeed = Math.round(item.wind_speed * 1.60934);
-              }
-            } else if (this.unitSpeed === 'mph') {
-              if (this.weather.attributes.wind_speed_unit === 'm/s') {
-                dWindSpeed = Math.round(item.wind_speed / 0.44704);
-              } else if (this.weather.attributes.wind_speed_unit === 'km/h') {
-                dWindSpeed = Math.round(item.wind_speed / 1.60934);
-              }
-            } else if (this.unitSpeed === 'Bft') {
-              dWindSpeed = this.calculateBeaufortScale(item.wind_speed);
-            }
-          } else {
-            dWindSpeed = Math.round(dWindSpeed);
+      if (this.unitSpeed !== this.weather.attributes.wind_speed_unit) {
+        if (this.unitSpeed === 'm/s') {
+          if (this.weather.attributes.wind_speed_unit === 'km/h') {
+            dWindSpeed = Math.round(item.wind_speed * 1000 / 3600);
+          } else if (this.weather.attributes.wind_speed_unit === 'mph') {
+            dWindSpeed = Math.round(item.wind_speed * 0.44704);
           }
+        } else if (this.unitSpeed === 'km/h') {
+          if (this.weather.attributes.wind_speed_unit === 'm/s') {
+            dWindSpeed = Math.round(item.wind_speed * 3.6);
+          } else if (this.weather.attributes.wind_speed_unit === 'mph') {
+            dWindSpeed = Math.round(item.wind_speed * 1.60934);
+          }
+        } else if (this.unitSpeed === 'mph') {
+          if (this.weather.attributes.wind_speed_unit === 'm/s') {
+            dWindSpeed = Math.round(item.wind_speed / 0.44704);
+          } else if (this.weather.attributes.wind_speed_unit === 'km/h') {
+            dWindSpeed = Math.round(item.wind_speed / 1.60934);
+          }
+        } else if (this.unitSpeed === 'Bft') {
+          dWindSpeed = this.calculateBeaufortScale(item.wind_speed);
+        }
+      } else {
+        dWindSpeed = Math.round(dWindSpeed);
+      }
 
-          return x`
+      return x`
                 <div class="wind-detail">
                   <ha-icon class="wind-icon" icon="hass:${this.getWindDirIcon(item.wind_bearing)}" style="--mdc-icon-size: ${windIconSize}px;"></ha-icon>
                   <span class="wind-speed" style="font-size: ${windSpeedFontSize}px;">${dWindSpeed}</span>
                   <span class="wind-unit" style="font-size: ${windUnitFontSize}px;">${this.ll('units')[this.unitSpeed]}</span>
                 </div>
               `;
-        })}
+    })}
       ` : ''}
     </div>
   `;
