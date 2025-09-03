@@ -188,6 +188,22 @@ class WeatherChartCard extends LitElement {
   }
 
   set hass(hass) {
+    // Home Assistant接続状態の監視用
+    if (!this._prevHassConnected) {
+      this._prevHassConnected = hass.connected;
+    }
+    // hass.connectedがfalse→trueになったとき再購読
+    if (this._prevHassConnected === false && hass.connected === true) {
+      if (this.forecastSubscriber) {
+        this.forecastSubscriber.then(unsub => unsub()).catch(() => {});
+        this.forecastSubscriber = null;
+      }
+      // 再購読
+      this.subscribeForecastEvents();
+      this.requestUpdate();
+    }
+    this._prevHassConnected = hass.connected;
+
     this._hass = hass;
     this.language = this.config.locale || hass.selectedLanguage || hass.language;
     this.sun = 'sun.sun' in hass.states ? hass.states['sun.sun'] : null;
@@ -221,6 +237,7 @@ class WeatherChartCard extends LitElement {
     if (this.weather && !this.forecastSubscriber) {
       this.subscribeForecastEvents();
     }
+    this.requestUpdate();
   }
 
   subscribeForecastEvents() {
