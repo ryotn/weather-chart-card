@@ -18070,15 +18070,18 @@ class WeatherChartCard extends s {
     if (!showTime) return;
 
     const currentDate = new Date();
+    // Home Assistantのタイムゾーンを取得
+    const timeZone = this._hass && this._hass.config && this._hass.config.time_zone ? this._hass.config.time_zone : undefined;
     const timeOptions = {
       hour12: use12HourFormat,
       hour: 'numeric',
       minute: 'numeric',
-      second: showSeconds ? 'numeric' : undefined
+      second: showSeconds ? 'numeric' : undefined,
+      timeZone: timeZone
     };
     const currentTime = currentDate.toLocaleTimeString(this.language, timeOptions);
-    const currentDayOfWeek = currentDate.toLocaleString(this.language, { weekday: 'long' }).toUpperCase();
-    const currentDateFormatted = currentDate.toLocaleDateString(this.language, { month: 'long', day: 'numeric' });
+    const currentDayOfWeek = currentDate.toLocaleString(this.language, { weekday: 'long', timeZone: timeZone }).toUpperCase();
+    const currentDateFormatted = currentDate.toLocaleDateString(this.language, { month: 'long', day: 'numeric', timeZone: timeZone });
 
     const mainDiv = this.shadowRoot && this.shadowRoot.querySelector('.main');
     if (mainDiv) {
@@ -18195,7 +18198,7 @@ class WeatherChartCard extends s {
         show_probability: false,
         labels_font_size: 11,
         precip_label_font_size: 11,
-        chart_datetime_font_size: 10,
+        chart_datetime_font_size: '10',
         chart_height: 180,
         precip_bar_size: 100,
         forecast_icon_size: 30,
@@ -18283,6 +18286,23 @@ class WeatherChartCard extends s {
       this.subscribeForecastEvents();
     }
     this.requestUpdate();
+    this.setHassIntervals();
+  }
+
+  setHassIntervals() {
+    // 時計interval管理
+    if (this.clockInterval) {
+      clearInterval(this.clockInterval);
+      this.clockInterval = null;
+    }
+    this.updateClock();
+    this.clockInterval = setInterval(() => this.updateClock(), 1000);
+    // 1時間おきにrequestUpdate
+    if (this.hourlyUpdateInterval) {
+      clearInterval(this.hourlyUpdateInterval);
+      this.hourlyUpdateInterval = null;
+    }
+    this.hourlyUpdateInterval = setInterval(() => this.requestUpdate(), 30 * 60 * 1000);
   }
 
   subscribeForecastEvents() {
@@ -18336,19 +18356,8 @@ class WeatherChartCard extends s {
       this.delayedAttachResizeObserver();
     }
     // 時計interval管理
-    if (this.clockInterval) {
-      clearInterval(this.clockInterval);
-      this.clockInterval = null;
-    }
-    this.updateClock();
-    this.clockInterval = setInterval(() => this.updateClock(), 1000);
-
-    // 1時間おきにrequestUpdate
-    if (this.hourlyUpdateInterval) {
-      clearInterval(this.hourlyUpdateInterval);
-      this.hourlyUpdateInterval = null;
-    }
-    this.hourlyUpdateInterval = setInterval(() => this.requestUpdate(), 30 * 60 * 1000);
+      // interval開始はset hass(hass)で行う
+      this.setHassIntervals();
   }
 
   delayedAttachResizeObserver() {
@@ -18780,6 +18789,7 @@ class WeatherChartCard extends s {
       };
     }
 
+    const self = this;
     this.forecastChart = new Chart(ctx, {
       type: 'bar',
       data: {
@@ -18814,30 +18824,29 @@ class WeatherChartCard extends s {
               callback: function (value, index, values) {
                 var datetime = this.getLabelForValue(value);
                 var dateObj = new Date(datetime);
-
+                // Home Assistantのタイムゾーン
+                var timeZone = self._hass && self._hass.config && self._hass.config.time_zone ? self._hass.config.time_zone : undefined;
                 var timeFormatOptions = {
                   hour12: config.use_12hour_format,
                   hour: 'numeric',
                   ...(config.use_12hour_format ? {} : { minute: 'numeric' }),
+                  timeZone: timeZone
                 };
-
                 var time = dateObj.toLocaleTimeString(language, timeFormatOptions);
-
                 if (dateObj.getHours() === 0 && dateObj.getMinutes() === 0 && config.forecast.type === 'hourly') {
                   var dateFormatOptions = {
                     day: 'numeric',
                     month: 'short',
+                    timeZone: timeZone
                   };
                   var date = dateObj.toLocaleDateString(language, dateFormatOptions);
                   time = time.replace('a.m.', 'AM').replace('p.m.', 'PM');
                   return [date, time];
                 }
-
                 if (config.forecast.type !== 'hourly') {
-                  var weekday = dateObj.toLocaleString(language, { weekday: 'short' }).toUpperCase();
+                  var weekday = dateObj.toLocaleString(language, { weekday: 'short', timeZone: timeZone }).toUpperCase();
                   return weekday;
                 }
-
                 time = time.replace('a.m.', 'AM').replace('p.m.', 'PM');
                 return time;
               },
@@ -18879,6 +18888,7 @@ class WeatherChartCard extends s {
             callbacks: {
               title: function (TooltipItem) {
                 var datetime = TooltipItem[0].label;
+                var timeZone = self._hass && self._hass.config && self._hass.config.time_zone ? self._hass.config.time_zone : undefined;
                 return new Date(datetime).toLocaleDateString(language, {
                   month: 'short',
                   day: 'numeric',
@@ -18886,6 +18896,7 @@ class WeatherChartCard extends s {
                   hour: 'numeric',
                   minute: 'numeric',
                   hour12: config.use_12hour_format,
+                  timeZone: timeZone
                 });
               },
               label: function (context) {
@@ -18893,7 +18904,6 @@ class WeatherChartCard extends s {
                 var value = context.formattedValue;
                 var probability = data.forecast[context.dataIndex].precipitation_probability;
                 var unit = context.datasetIndex === 2 ? precipUnit : tempUnit;
-
                 if (config.forecast.precipitation_type === 'rainfall' && context.datasetIndex === 2 && config.forecast.show_probability && probability !== undefined && probability !== null) {
                   return label + ': ' + value + ' ' + precipUnit + ' / ' + Math.round(probability) + '%';
                 } else {
@@ -18930,7 +18940,6 @@ class WeatherChartCard extends s {
       if (typeof d.templow !== 'undefined') {
         tempLow.push(d.templow);
       }
-
       if (roundTemp) {
         tempHigh[i] = Math.round(tempHigh[i]);
         if (typeof d.templow !== 'undefined') {
@@ -19351,11 +19360,13 @@ class WeatherChartCard extends s {
     }
 
     const use12HourFormat = this.config.use_12hour_format;
-    const timeOptions = {
-      hour12: use12HourFormat,
-      hour: 'numeric',
-      minute: 'numeric'
-    };
+      const timeZone = this._hass && this._hass.config && this._hass.config.time_zone ? this._hass.config.time_zone : undefined;
+      const timeOptions = {
+        hour12: use12HourFormat,
+        hour: 'numeric',
+        minute: 'numeric',
+        timeZone: timeZone
+      };
 
     return x`
     <ha-icon icon="mdi:weather-sunset-up"></ha-icon>
